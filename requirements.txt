@@ -1,0 +1,10 @@
+flask
+requests
+Pillow
+numpy
+opencv-python
+onnxruntime
+pyclipper
+huggingface_hub
+py7zr
+rarfile
