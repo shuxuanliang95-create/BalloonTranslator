@@ -27,7 +27,7 @@ TASKS = {}
 REVIEWS = {}
 TASK_LOCK = threading.Lock()
 IMAGE_EXTS={".png",".jpg",".jpeg",".webp",".bmp",".tif",".tiff"}
-FONT_SCALE=1.62
+FONT_SCALE=1.72
 
 def _fs(n):
     return max(9, int(round(float(n) * FONT_SCALE)))
@@ -651,6 +651,7 @@ def font_for(size, bold=False):
         r"C:\Windows\Fonts\msyhbd.ttc",
         r"C:\Windows\Fonts\simhei.ttf",
         r"C:\Windows\Fonts\simsun.ttc",
+        str(root/"NotoSansSC.ttf"),
         str(root/"fonts"/"NotoSansSC.ttf"),
         r"C:\Windows\Fonts\meiryo.ttc",
         r"C:\Windows\Fonts\msgothic.ttc",
@@ -812,11 +813,12 @@ def _draw_vertical_region(img,box,text):
     max_cols=max(1,(bw-3)//max(1,size+2))
     cols=cols[:max_cols]
     # 右起向左排，模拟日文竖排阅读栏；通常只需要一栏。
+    fill,stroke,sw=_text_style_params(img,box,size)
     for ci,col in enumerate(cols):
         cx=x2-(ci+1)*size-2
         cy=y1+5
         for ch in col:
-            d.text((cx,cy),ch,font=f,fill=(24,24,24))
+            _draw_styled_text(d,(cx,cy),ch,font=f,fill=fill,stroke=stroke,stroke_width=sw)
             cy+=lh
 
 
@@ -852,7 +854,7 @@ def _text_style_params(img, box, size):
         fill=(255,255,255); stroke=(8,8,8)
     else:
         fill=(8,8,8); stroke=(255,255,255)
-    stroke_width=4 if size>=22 else (3 if size>=14 else 2)
+    stroke_width=5 if size>=22 else (4 if size>=14 else 3)
     return fill,stroke,stroke_width
 
 def _draw_styled_text(draw, xy, text, font, fill, stroke, stroke_width):
