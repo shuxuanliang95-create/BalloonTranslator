@@ -5,6 +5,22 @@
 - 仓库地址：[shuxuanliang95-create/BalloonTranslator](https://github.com/shuxuanliang95-create/BalloonTranslator)
 - 当前重点：改善 v12.6 翻译文字的大小、清晰度和醒目程度，同时保持现有功能稳定。
 
+## 快速开始：安装与使用
+
+首次使用前，请按 [INSTALL.md 安装指南](INSTALL.md) 准备 Python 3.11、Python 依赖、Ollama 本地翻译模型，以及 OCR 和 LaMa 图像修复模型。**仅下载仓库代码还不够，模型文件需要按指南单独准备。**
+
+- **安装依赖：** 双击 `install_windows_v12_6.bat`
+- **下载 OCR 模型：** 双击 `download_ppocr_manga_models.bat`
+- **下载擦字修复模型：** 双击 `download_manga_inpaint_model.bat`
+- **启动程序：** 确认 Ollama 中已准备好 `hy-mt2-7b`，然后双击 `start_windows_v12_6.bat`
+- **打开界面：** 在本机浏览器访问 http://127.0.0.1:7860
+
+注意：当前安装脚本没有显式安装 PyTorch，而 LaMa 擦字修复功能需要 PyTorch；具体安装方式请参照 [INSTALL.md](INSTALL.md) 中的说明。上述步骤尚需在目标电脑上实际验证，遇到问题请提交日志和环境信息。
+
+**需要帮助？** [查看安装指南](INSTALL.md) · [提交 Bug 报告](.github/ISSUE_TEMPLATE/bug_report.md) · [贡献指南](CONTRIBUTING.md)
+
+---
+
 ## 1. 项目介绍
 
 BalloonTranslator 是一个面向日文漫画翻译场景的 Windows 工具，目标是帮助用户处理漫画图片中的日文文字，并将翻译结果显示在漫画画面中。
