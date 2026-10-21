@@ -1,5 +1,7 @@
 # BalloonTranslator
 
+**简体中文** | [English](README_EN.md)
+
 **一款面向 Windows 的漫画翻译工具，致力于让日文漫画翻译更加方便、清晰、自然。**
 
 - 仓库地址：[shuxuanliang95-create/BalloonTranslator](https://github.com/shuxuanliang95-create/BalloonTranslator)
