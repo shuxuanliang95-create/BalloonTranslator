@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JP Manga Translator v12.6 - 人工框选</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>JP Manga Translator v12.6</h1>
+    <div class="hint">以 v12.5 为底：OCR 后先进入人工框选，确认后才翻译。手动锁定的框不再自动拆分或合并。气泡继续原来的气泡排版；拉成大框的长对白用横排中文。中文字号已再加大，描边与对比加强。同一句话的碎框会在初次识别时合成一个框。OCR / Hy-MT2 / AI 擦字核心未改。</div>
+  </div>
+
+  <div class="card">
+    <h2>AI / OCR 配置</h2>
+    <div class="grid">
+      <div><label>Ollama Endpoint</label><input id="endpoint" value="http://127.0.0.1:11434/api/chat"></div>
+      <div><label>Model</label><input id="model" value="hy-mt2-7b"></div>
+      <div><label>API Key</label><input id="key" type="password" value="ollama" placeholder="本地 Ollama 可填 ollama"></div>
+      <div><label>Batch size</label><input id="batch" type="number" value="4" min="1" max="12"></div>
+      <div><label>Max output tokens</label><input id="maxout" type="number" value="1600" min="400" max="6000"></div>
+      <div><label>Timeout (seconds)</label><input id="timeout" type="number" value="180" min="20" max="900"></div>
+    </div>
+    <div class="hint" style="margin-top:8px">中文优先微软雅黑 / 黑体 / 随包 Noto Sans SC，避免缺字变成口口。字号约提高 18%，描边加粗，成图对比略加强。</div>
+    <div class="grid">
+      <div><button onclick="saveCfg()">保存配置</button></div>
+      <div><button onclick="testOllama()" class="sec">测试 Ollama</button></div>
+    </div>
+    <button onclick="testOCR()" class="sec">测试 OCR</button>
+    <div id="ollamastatus" class="mono" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2>第一步：OCR 后人工框选</h2>
+    <div class="hint">选择图片或整本压缩包。OCR 跑完后改框：左键拖动、缩放、删除、新增。右键按住移动画面，不拖图片本身。合并先点一个框，再点「合并」，再点第二个框。Ctrl+Z 撤回。锁定后才翻译。</div>
+    <input id="ocrfile" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.zip,.cbz,.7z,.rar">
+    <button id="ocrbtn" onclick="startReview()">运行 OCR 并进入框选</button>
+    <div id="ocrstatus" class="mono">等待选择文件…</div>
+    <div id="editorWrap" style="display:none;margin-top:10px">
+      <div class="toolbar">
+        <button type="button" id="toolSelect" onclick="setTool('select')">选择 V</button>
+        <button type="button" id="toolDraw" class="ghost" onclick="setTool('draw')">画框 N</button>
+        <button type="button" class="ghost" id="mergeBtn" onclick="mergeSelected()">合并 M</button>
+        <button type="button" class="ghost" onclick="deleteSelected()">删除</button>
+        <button type="button" class="ghost" id="undoBtn" onclick="undoOnce()" disabled>撤回</button>
+        <button type="button" class="ghost" id="redoBtn" onclick="redoOnce()" disabled>重做</button>
+        <button type="button" class="ghost" onclick="recognizeSelected()">重识别本框</button>
+        <button type="button" class="ghost" onclick="prevPage()">上一页</button>
+        <button type="button" class="ghost" onclick="nextPage()">下一页</button>
+        <span class="hint" id="pageMeta"></span>
+      </div>
+      <div class="hint" id="mergeHint">右键拖动移动画面；滚轮以光标为中心缩放；先点框再点合并再点第二个框。Ctrl+Z 撤回。</div>
+      <div class="editor-grid">
+        <div>
+          <div id="stage" class="stage"></div>
+          <div id="film" class="film"></div>
+        </div>
+        <div class="side">
+          <div class="toolbar" style="margin-top:0">
+            <button type="button" id="kindBubble" onclick="setKind('bubble')">气泡</button>
+            <button type="button" id="kindLong" class="ghost" onclick="setKind('long')">长对白</button>
+          </div>
+          <div class="hint" style="margin:6px 0">气泡沿用原来的竖/横排；拉成大框或标成长对白后，内部用横排中文。</div>
+          <textarea id="boxText" placeholder="OCR 文字，可直接修改"></textarea>
+          <button type="button" onclick="lockPage()">锁定本页</button>
+          <button type="button" class="sec" onclick="lockAll()">全部按当前框锁定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>第二步：批量整本翻译</h2>
+    <div class="two-col">
+      <div>
+        <div class="hint">确认区域后再点开始。进度条、页数和右侧预览与 v12.5 相同。</div>
+        <button id="translatebtn" onclick="translateLocked()">一键开始批量翻译并生成 ZIP</button>
+        <div id="status" class="mono">等待锁定页面…</div>
+        <div class="bar"><span id="barfill"></span></div>
+        <div class="stats">
+          <div class="stat">总页数<b id="statTotal">0</b></div>
+          <div class="stat">已完成<b id="statDone">0</b></div>
+          <div class="stat">失败/部分失败<b id="statFail">0</b></div>
+        </div>
+        <a id="download" style="display:none;margin-top:10px" target="_blank">下载完成的 ZIP / CBZ</a>
+      </div>
+      <div class="preview-side">
+        <div style="font-weight:700;margin-bottom:6px">当前处理图片预览</div>
+        <div id="currentName" class="hint" style="margin-bottom:6px">尚未开始</div>
+        <img id="batchPreview" style="display:none" alt="预览">
+        <div id="currentStatus" class="mono" style="margin-top:8px">等待任务…</div>
+        <div id="queue" class="queue"></div>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:8px">默认串行处理，保证右侧预览严格按页序更新；每完成一张就更新一次预览。即使某一页失败，也会把原图保留在输出 ZIP 中并继续下一页。</div>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
