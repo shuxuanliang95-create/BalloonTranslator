@@ -27,7 +27,7 @@ TASKS = {}
 REVIEWS = {}
 TASK_LOCK = threading.Lock()
 IMAGE_EXTS={".png",".jpg",".jpeg",".webp",".bmp",".tif",".tiff"}
-FONT_SCALE=1.72
+FONT_SCALE=1.80
 
 def _fs(n):
     return max(9, int(round(float(n) * FONT_SCALE)))
