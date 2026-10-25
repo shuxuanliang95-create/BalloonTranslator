@@ -895,7 +895,7 @@ def draw_chinese(img,box,text,region_type="bubble"):
     else:
         size=_fs(max(13,min(38,int(min(max(13,bw*.20),max(13,bh*.33))))));f=style_font(img,(x1,y1,x2,y2),size);lines=[];cur=""
         for ch in clean_text:
-            if d.textbbox((0,0),cur+ch,font=f)[2]<=bw-10:cur+=ch
+            if f.width(d,cur+ch)<=bw-10:cur+=ch
             else:
                 if cur:lines.append(cur)
                 cur=ch
@@ -950,7 +950,7 @@ def _draw_bubble_group(img,item,text):
         f,lines,lh,size=chosen
         total_h=len(lines)*lh; y=y1+(bh-total_h)//2
         for line in lines:
-            bb=d.textbbox((0,0),line,font=f); tw=bb[2]-bb[0]
+            tw=f.width(d,line)
             fill,stroke,sw=_text_style_params(img,(x1,y1,x2,y2),size)
             _draw_styled_text(d,(x1+(bw-tw)//2,y),line,f,fill,stroke,sw); y+=lh
 
