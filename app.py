@@ -10,6 +10,7 @@ from manga_inpaint import inpaint as ai_inpaint, is_ready as ai_inpaint_ready
 import numpy as np
 import cv2
 from ppocr_manga import PPOMangaOCR
+from cn_font import TextFont
 
 try:
     import py7zr
@@ -644,36 +645,9 @@ def call_chat(endpoint,key,model,prompt,timeout,maxout):
     data=r.json();return data["choices"][0]["message"]["content"],data.get("usage",{})
 
 def font_for(size, bold=False):
-    """中文覆盖优先用黑体/雅黑，避免 Meiryo 缺简体字出现口口。"""
-    root=Path(__file__).resolve().parent
-    regular=[
-        r"C:\Windows\Fonts\msyh.ttc",
-        r"C:\Windows\Fonts\msyhbd.ttc",
-        r"C:\Windows\Fonts\simhei.ttf",
-        r"C:\Windows\Fonts\simsun.ttc",
-        str(root/"NotoSansSC.ttf"),
-        str(root/"fonts"/"NotoSansSC.ttf"),
-        r"C:\Windows\Fonts\meiryo.ttc",
-        r"C:\Windows\Fonts\msgothic.ttc",
-        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
-    ]
-    heavy=[
-        r"C:\Windows\Fonts\msyhbd.ttc",
-        r"C:\Windows\Fonts\msyh.ttc",
-        r"C:\Windows\Fonts\simhei.ttf",
-        str(root/"fonts"/"NotoSansSC.ttf"),
-        r"C:\Windows\Fonts\meiryob.ttc",
-        r"C:\Windows\Fonts\msgothic.ttc",
-        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
-    ]
-    for fp in (heavy if bold else regular):
-        if os.path.exists(fp):
-            for idx in (0,1,2):
-                try:return ImageFont.truetype(fp,size=size,index=idx)
-                except Exception:pass
-            try:return ImageFont.truetype(fp,size=size)
-            except Exception:pass
-    return ImageFont.load_default()
+    """按实际字形覆盖率选择字体，缺字时逐字回退，避免中文显示成方框。"""
+    return TextFont(size, bold=bold)
+
 
 def style_font(img, box, size, force_bold=False):
     try:
@@ -823,21 +797,8 @@ def _draw_vertical_region(img,box,text):
 
 
 def _wrap_horizontal_cn(draw,text,font,max_width):
-    text=str(text or '').strip()
-    if not text:return []
-    lines=[]; cur=''
-    for ch in text:
-        if ch=='\n':
-            if cur.strip():lines.append(cur.strip())
-            cur=''; continue
-        test=cur+ch
-        bb=draw.textbbox((0,0),test,font=font)
-        if cur and bb[2]-bb[0]>max_width:
-            lines.append(cur.strip()); cur=ch
-        else:
-            cur=test
-    if cur.strip(): lines.append(cur.strip())
-    return lines
+    return font.wrap(draw,text,max_width)
+
 
 
 def _text_style_params(img, box, size):
@@ -858,7 +819,10 @@ def _text_style_params(img, box, size):
     return fill,stroke,stroke_width
 
 def _draw_styled_text(draw, xy, text, font, fill, stroke, stroke_width):
-    draw.text(xy, text, font=font, fill=fill, stroke_width=stroke_width, stroke_fill=stroke)
+    """font 是 cn_font.TextFont：整句能同字体就整句画，否则逐字回退。"""
+    font.draw(draw, xy, text, fill=fill, stroke_width=stroke_width, stroke_fill=stroke)
+
+
 
 def _draw_body_paragraph(img,item,text):
     """正文面板：只擦 member_boxes 的文字，然后在成员框联合区域内自适应横排。"""
